@@ -1,0 +1,28 @@
+name: MoarParticles
+version: 0.1
+author: rfsantos1996
+main: com.jabyftw.mp.MoarParticles
+description: Moar particles for your server
+commands:
+   particles:
+     description: Main command
+     usage: Use /particles (fall/teleport/entitydmg/playerdmg) (true/false)
+   effect:
+     description: Player command
+     usage: Use /effect (fire/smoke/colored) (all/radius)
+permissions:
+   particles.listener:
+     description: change the fall, teleport and damage particles
+     default: op
+   particles.all:
+     description: allow you to /effect (particle) on everybody
+     default: true 
+   particles.fire:
+     description: allow you to /effect fire
+     default: true
+   particles.smoke:
+     description: allow you to /effect smoke
+     default: true
+   particles.colored:
+     description: allow you to /effect colored
+     default: true
