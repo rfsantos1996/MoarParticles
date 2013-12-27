@@ -107,13 +107,13 @@ public class MoarParticles extends JavaPlugin implements Listener {
             Player p = (Player) e.getEntity();
             if (e.getCause().equals(DamageCause.FALL)) {
                 if (fallDamage) {
-                    if (p.getNoDamageTicks() < 10) {
+                    if (p.getNoDamageTicks() < (p.getMaximumNoDamageTicks() / 2)) {
                         effectSmoke(16, p.getLocation());
                     }
                 }
             } else {
                 if (playerDamage) {
-                    if (p.getNoDamageTicks() < 10) {
+                    if (p.getNoDamageTicks() < (p.getMaximumNoDamageTicks() / 2)) {
                         effectBreak(1, e.getEntity().getLocation(), 11);
                     }
                 }
@@ -126,14 +126,14 @@ public class MoarParticles extends JavaPlugin implements Listener {
         if (e.getEntity() instanceof Player) {
             Player p = (Player) e.getEntity();
             if (playerDamage) {
-                if (p.getNoDamageTicks() < 10) {
+                if (p.getNoDamageTicks() < (p.getMaximumNoDamageTicks() / 2)) {
                     effectBreak(1, p.getLocation(), 11);
                 }
             }
         } else {
             if (entityDamage) {
                 if (e.getEntity() instanceof LivingEntity) {
-                    if (((LivingEntity) e.getEntity()).getNoDamageTicks() < 10) {
+                    if (((LivingEntity) e.getEntity()).getNoDamageTicks() < (((LivingEntity) e.getEntity()).getMaximumNoDamageTicks() / 2)) {
                         effectBreak(1, e.getEntity().getLocation(), 55);
                     }
                 }
