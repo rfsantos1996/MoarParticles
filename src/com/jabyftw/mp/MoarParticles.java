@@ -2,9 +2,7 @@ package com.jabyftw.mp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import org.bukkit.Effect;
@@ -31,7 +29,6 @@ public class MoarParticles extends JavaPlugin implements Listener {
     public Random r = new Random();
     public boolean entityDamage, playerDamage, fallDamage, teleport;
     public List<String> colors = new ArrayList();
-    public Map<Player, Integer> effects = new HashMap();
 
     @Override
     public void onEnable() {
@@ -43,9 +40,12 @@ public class MoarParticles extends JavaPlugin implements Listener {
         config.addDefault("config.listener.playerDamage", true);
         config.addDefault("config.listener.fallDamage", true);
         config.addDefault("config.listener.teleport", true);
+        config.addDefault("config.command.effectDelayInTicks", 4);
+        config.addDefault("config.command.effectDurationInSec", 60);
         //config.addDefault("lang.", "&");
         config.addDefault("lang.noPermission", "&cNo permission!");
         config.addDefault("lang.changedValue", "&6Changed value of &e%value&6 to &e%to&6.");
+        config.addDefault("lang.alreadyOnEffect", "&cAlready running effect on you.");
         config.options().copyDefaults(true);
         saveConfig();
         reloadConfig();
@@ -54,7 +54,7 @@ public class MoarParticles extends JavaPlugin implements Listener {
         fallDamage = config.getBoolean("config.listener.fallDamage");
         teleport = config.getBoolean("config.listener.teleport");
         getLogger().log(Level.INFO, "Loaded configuration.");
-        getServer().getPluginCommand("effect").setExecutor(new EffectExecutor(this));
+        getServer().getPluginCommand("effect").setExecutor(new EffectExecutor(this, config.getInt("config.command.effectDelayInTicks"), config.getInt("config.command.effectDurationInSec")));
         getServer().getPluginCommand("particles").setExecutor(new ParticlesExecutor(this));
         getLogger().log(Level.INFO, "Registered commands.");
         getServer().getPluginManager().registerEvents(this, this);
