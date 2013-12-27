@@ -1,6 +1,8 @@
 package com.jabyftw.mp;
 
 import com.jabyftw.mp.constant.ColoredGround;
+import com.jabyftw.mp.constant.FireEffect;
+import com.jabyftw.mp.constant.SmokeEffect;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,14 +45,18 @@ public class EffectExecutor implements CommandExecutor {
                     if (args.length == 1) { // /effect fire/smoke/colored
                         if (args[0].startsWith("f")) {
                             if (sender.hasPermission("particles.fire")) {
-                                return false;
+                                effects.put(p, bs.scheduleSyncDelayedTask(pl, new FireEffect(pl, p), delay));
+                                removeEffect(p);
+                                return true;
                             } else {
                                 sender.sendMessage(pl.getLang("noPermission"));
                                 return true;
                             }
                         } else if (args[0].startsWith("s")) {
                             if (sender.hasPermission("particles.smoke")) {
-                                return false;
+                                effects.put(p, bs.scheduleSyncDelayedTask(pl, new SmokeEffect(pl, p), delay));
+                                removeEffect(p);
+                                return true;
                             } else {
                                 sender.sendMessage(pl.getLang("noPermission"));
                                 return true;
@@ -69,14 +75,56 @@ public class EffectExecutor implements CommandExecutor {
                         if (sender.hasPermission("perticles.all")) {
                             if (args[0].startsWith("f")) {
                                 if (sender.hasPermission("particles.fire")) {
-                                    return false;
+                                    if (args[1].startsWith("a")) {
+                                        for (Player player : p.getWorld().getPlayers()) {
+                                            if (!effects.containsKey(player)) {
+                                                effects.put(player, bs.scheduleSyncDelayedTask(pl, new FireEffect(pl, player), delay));
+                                                removeEffect(player);
+                                            }
+                                        }
+                                        return true;
+                                    } else {
+                                        try {
+                                            int radius = Integer.parseInt(args[1]);
+                                            for (Player player : getPlayersNear(p, radius)) {
+                                                if (!effects.containsKey(player)) {
+                                                    effects.put(player, bs.scheduleSyncDelayedTask(pl, new FireEffect(pl, player), delay));
+                                                    removeEffect(player);
+                                                }
+                                            }
+                                            return true;
+                                        } catch (NumberFormatException e) {
+                                            return false;
+                                        }
+                                    }
                                 } else {
                                     sender.sendMessage(pl.getLang("noPermission"));
                                     return true;
                                 }
                             } else if (args[0].startsWith("s")) {
                                 if (sender.hasPermission("particles.smoke")) {
-                                    return false;
+                                    if (args[1].startsWith("a")) {
+                                        for (Player player : p.getWorld().getPlayers()) {
+                                            if (!effects.containsKey(player)) {
+                                                effects.put(player, bs.scheduleSyncDelayedTask(pl, new SmokeEffect(pl, player), delay));
+                                                removeEffect(player);
+                                            }
+                                        }
+                                        return true;
+                                    } else {
+                                        try {
+                                            int radius = Integer.parseInt(args[1]);
+                                            for (Player player : getPlayersNear(p, radius)) {
+                                                if (!effects.containsKey(player)) {
+                                                    effects.put(player, bs.scheduleSyncDelayedTask(pl, new SmokeEffect(pl, player), delay));
+                                                    removeEffect(player);
+                                                }
+                                            }
+                                            return true;
+                                        } catch (NumberFormatException e) {
+                                            return false;
+                                        }
+                                    }
                                 } else {
                                     sender.sendMessage(pl.getLang("noPermission"));
                                     return true;
@@ -139,8 +187,8 @@ public class EffectExecutor implements CommandExecutor {
 
     private List<Player> getPlayersNear(Player p, int radius) {
         List<Player> l = new ArrayList();
-        for(Player player : p.getWorld().getPlayers()) {
-            if(player.getLocation().distanceSquared(p.getLocation()) < (radius * radius)) {
+        for (Player player : p.getWorld().getPlayers()) {
+            if (player.getLocation().distanceSquared(p.getLocation()) < (radius * radius)) {
                 l.add(player);
             }
         }

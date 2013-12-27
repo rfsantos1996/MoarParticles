@@ -9,6 +9,7 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -16,8 +17,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  *
@@ -29,6 +33,7 @@ public class MoarParticles extends JavaPlugin implements Listener {
     public Random r = new Random();
     public boolean entityDamage, playerDamage, fallDamage, teleport;
     public List<String> colors = new ArrayList();
+    public EffectExecutor FxExec;
 
     @Override
     public void onEnable() {
@@ -54,7 +59,8 @@ public class MoarParticles extends JavaPlugin implements Listener {
         fallDamage = config.getBoolean("config.listener.fallDamage");
         teleport = config.getBoolean("config.listener.teleport");
         getLogger().log(Level.INFO, "Loaded configuration.");
-        getServer().getPluginCommand("effect").setExecutor(new EffectExecutor(this, config.getInt("config.command.effectDelayInTicks"), config.getInt("config.command.effectDurationInSec")));
+        FxExec = new EffectExecutor(this, config.getInt("config.command.effectDelayInTicks"), config.getInt("config.command.effectDurationInSec"));
+        getServer().getPluginCommand("effect").setExecutor(FxExec);
         getServer().getPluginCommand("particles").setExecutor(new ParticlesExecutor(this));
         getLogger().log(Level.INFO, "Registered commands.");
         getServer().getPluginManager().registerEvents(this, this);
@@ -101,11 +107,15 @@ public class MoarParticles extends JavaPlugin implements Listener {
             Player p = (Player) e.getEntity();
             if (e.getCause().equals(DamageCause.FALL)) {
                 if (fallDamage) {
-                    effectSmoke(16, p.getLocation());
+                    if (p.getNoDamageTicks() < 10) {
+                        effectSmoke(16, p.getLocation());
+                    }
                 }
             } else {
                 if (playerDamage) {
-                    effectBreak(1, e.getEntity().getLocation(), 11);
+                    if (p.getNoDamageTicks() < 10) {
+                        effectBreak(1, e.getEntity().getLocation(), 11);
+                    }
                 }
             }
         }
@@ -116,20 +126,49 @@ public class MoarParticles extends JavaPlugin implements Listener {
         if (e.getEntity() instanceof Player) {
             Player p = (Player) e.getEntity();
             if (playerDamage) {
-                effectBreak(1, e.getEntity().getLocation(), 11);
+                if (p.getNoDamageTicks() < 10) {
+                    effectBreak(1, p.getLocation(), 11);
+                }
             }
         } else {
             if (entityDamage) {
-                effectBreak(1, e.getEntity().getLocation(), 55);
+                if (e.getEntity() instanceof LivingEntity) {
+                    if (((LivingEntity) e.getEntity()).getNoDamageTicks() < 10) {
+                        effectBreak(1, e.getEntity().getLocation(), 55);
+                    }
+                }
             }
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onTp(PlayerTeleportEvent e) {
-        Player p = e.getPlayer();
+        final Player p = e.getPlayer();
         if (teleport) {
-            effectTp(16, p.getLocation());
+            getServer().getScheduler().scheduleSyncDelayedTask(this, new BukkitRunnable() {
+
+                @Override
+                public void run() {
+                    effectTp(8, p.getLocation());
+                }
+            }, 20);
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) {
+        checkExit(e.getPlayer());
+    }
+
+    @EventHandler
+    public void onKick(PlayerKickEvent e) {
+        checkExit(e.getPlayer());
+    }
+
+    private void checkExit(Player p) {
+        if (FxExec.effects.containsKey(p)) {
+            getServer().getScheduler().cancelTask(FxExec.effects.get(p));
+            FxExec.effects.remove(p);
         }
     }
 }
