@@ -20,6 +20,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -145,13 +146,15 @@ public class MoarParticles extends JavaPlugin implements Listener {
     public void onTp(PlayerTeleportEvent e) {
         final Player p = e.getPlayer();
         if (teleport) {
-            getServer().getScheduler().scheduleSyncDelayedTask(this, new BukkitRunnable() {
+            if (!e.getCause().equals(TeleportCause.PLUGIN)) {
+                getServer().getScheduler().scheduleSyncDelayedTask(this, new BukkitRunnable() {
 
-                @Override
-                public void run() {
-                    effectTp(8, p.getLocation());
-                }
-            }, 20);
+                    @Override
+                    public void run() {
+                        effectTp(8, p.getLocation());
+                    }
+                }, 20);
+            }
         }
     }
 
