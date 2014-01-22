@@ -2,7 +2,9 @@ package com.jabyftw.mp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import org.bukkit.Effect;
@@ -29,13 +31,14 @@ import org.bukkit.scheduler.BukkitRunnable;
  * @author Rafael
  */
 public class MoarParticles extends JavaPlugin implements Listener {
-
+    
     public FileConfiguration config;
     public Random r = new Random();
     public boolean entityDamage, playerDamage, fallDamage, teleport;
     public List<String> colors = new ArrayList();
+    public Map<Player, Integer> tpCd = new HashMap();
     public EffectExecutor FxExec;
-
+    
     @Override
     public void onEnable() {
         String[] li = {"57", "35", "22", "152", "133", "79", "51"};
@@ -67,41 +70,41 @@ public class MoarParticles extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
         getLogger().log(Level.INFO, "Registered events.");
     }
-
+    
     @Override
     public void onDisable() {
         getLogger().log(Level.INFO, "Disabled.");
     }
-
+    
     public String getLang(String path) {
         return config.getString("lang." + path).replaceAll("&", "§");
     }
-
+    
     public void effectSmoke(int quantity, Location loc) {
         for (int i = 0; i <= quantity; i++) {
             loc.getWorld().playEffect(loc, Effect.SMOKE, r.nextInt(8));
         }
     }
-
+    
     public void effectBreak(int quantity, Location loc, int id) {
         for (int i = 0; i <= quantity; i++) {
             loc.getWorld().playEffect(loc, Effect.STEP_SOUND, id);
         }
     }
-
+    
     public void effectFire(int quantity, Location loc) {
         for (int i = 0; i <= quantity; i++) {
             loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 0);
         }
     }
-
+    
     public void effectTp(int quantity, Location loc) {
         loc.getWorld().playSound(loc, Sound.PORTAL_TRIGGER, 1, 0);
         for (int i = 0; i <= quantity; i++) {
             loc.getWorld().playEffect(loc, Effect.ENDER_SIGNAL, 0);
         }
     }
-
+    
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onDamage(EntityDamageEvent e) {
         if (e.getEntity() instanceof Player) {
@@ -121,7 +124,7 @@ public class MoarParticles extends JavaPlugin implements Listener {
             }
         }
     }
-
+    
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onDamageByEntity(EntityDamageByEntityEvent e) {
         if (e.getEntity() instanceof Player) {
@@ -141,37 +144,50 @@ public class MoarParticles extends JavaPlugin implements Listener {
             }
         }
     }
-
+    
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onTp(PlayerTeleportEvent e) {
         final Player p = e.getPlayer();
         if (teleport) {
             if (!e.getCause().equals(TeleportCause.PLUGIN)) {
-                getServer().getScheduler().scheduleSyncDelayedTask(this, new BukkitRunnable() {
-
-                    @Override
-                    public void run() {
-                        effectTp(8, p.getLocation());
-                    }
-                }, 20);
+                if (!tpCd.containsKey(p)) {
+                    tpCd.put(p, getServer().getScheduler().scheduleSyncDelayedTask(this, new BukkitRunnable() {
+                        
+                        @Override
+                        public void run() {
+                            tpCd.remove(p);
+                        }
+                    }, 20 * 3));
+                    getServer().getScheduler().scheduleSyncDelayedTask(this, new BukkitRunnable() {
+                        
+                        @Override
+                        public void run() {
+                            effectTp(8, p.getLocation());
+                        }
+                    }, 20);
+                }
             }
         }
     }
-
+    
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         checkExit(e.getPlayer());
     }
-
+    
     @EventHandler
     public void onKick(PlayerKickEvent e) {
         checkExit(e.getPlayer());
     }
-
+    
     private void checkExit(Player p) {
         if (FxExec.effects.containsKey(p)) {
             getServer().getScheduler().cancelTask(FxExec.effects.get(p));
             FxExec.effects.remove(p);
+        }
+        if (tpCd.containsKey(p)) {
+            getServer().getScheduler().cancelTask(tpCd.get(p));
+            tpCd.remove(p);
         }
     }
 }
