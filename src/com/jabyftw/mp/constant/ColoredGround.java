@@ -27,7 +27,7 @@ public class ColoredGround extends BukkitRunnable {
     public void run() {
         List<Location> blocks = getBlocksByRadius(p.getLocation(), 2);
         for (Location loc : blocks) {
-            pl.effectBreak(3, loc, color);
+            pl.effectBreak((pl.breake / 2), loc, color);
         }
     }
 

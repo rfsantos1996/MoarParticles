@@ -20,6 +20,6 @@ public class FireEffect extends BukkitRunnable {
 
     @Override
     public void run() {
-        pl.effectFire(2, p.getLocation());
+        pl.effectFire((pl.fire / 2), p.getLocation());
     }
 }
